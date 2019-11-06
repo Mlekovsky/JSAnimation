@@ -1,30 +1,33 @@
 var canvas;
-var window;
+var context;
 var repeater;
 var pile;
+var backgroundColor = "#CCCCCC";
 
 function beginAnimation()
 {
     canvas = document.getElementById( "myCanvas" );
-    window = canvas.getContext( "2d" );
+    context = canvas.getContext( "2d" );
 
-    window.fillStyle = backgroundColor;
-    window.fillRect( 0, 0, canvas.width, canvas.height );
+    context.fillStyle = backgroundColor;
+    context.fillRect( 0, 0, canvas.width, canvas.height );
 
     pile = new Pile();    
-
-    repeater = setTimeout(continueAnimation, 10);
+    pile.setHeight(3);
+    repeater = setTimeout(continueAnimation, 100);
 }
 
 function continueAnimation()
 {
-
+    pile.draw();
+    repeater = setTimeout(continueAnimation, 100);
 }
 
 function Pile()
 {
     this.cannonBalls = [];
     this.height = 0;
+    this.heightChanged = false;
 
     this.addCannonBall = function(Circle)
     {
@@ -34,32 +37,45 @@ function Pile()
     this.setHeight = function(height)
     {
         this.height = height;
-    }
-
-    this.draw = function()
-    {
-        fillCannonBalls();
-        drawCannonBalls();
+        this.heightChanged = true;
     }
 
     this.drawCannonBalls = function()
     {
-        for(var i = 0; i < this.height; i++)
+        var indexCounter = 0;
+        for(var i = 0; i <= this.height; i++)
         {
-            
+            for(var j = 0; j <= i;j++)
+            {
+                var ball = this.cannonBalls[indexCounter++];
+                context.save();
+                context.transform(1,0,0,1,(i+1)*25,(j+1) * 25);
+                ball.draw();
+                context.restore();
+            }
         }
     }
 
     this.fillCannonBalls = function(){
-        for(var i = 0; i < this.height; i++)
+        for(var i = 0; i <= this.height; i++)
         {
-            for(var j = 0; j < i; j++)
+            for(var j = 0; j <= i; j++)
             {
-               cannonBalls.push(new Circle(
-                    10,"#FFFFFF",0
+               this.cannonBalls.push(new Circle(
+                    12,"#000000",0
                ));
             }
-        }   
+        }
+        this.heightChanged = false;   
+    }
+    
+    this.draw = function()
+    {
+        if(this.heightChanged)
+        {
+            this.fillCannonBalls();
+        }
+        this.drawCannonBalls();
     }
 }
 
@@ -74,7 +90,7 @@ function Circle(radius, color, opactiy)
     this.draw = function (){
         context.fillStyle = this.color;
         context.beginPath();
-        context.arc( this.X, this.Y, this.radius, 0, Math.PI * 2, true );
+        context.arc( this.X, this.Y, this.radius, 0, Math.PI * 2 );
         context.closePath();
         context.fill();
     }
