@@ -6,8 +6,14 @@
         <title>Cannonball shooter</title>
     </head>
     <body onLoad="beginAnimation();">
-        <p align="center">
-            <canvas id="myCanvas" width="800" height="600" style="background: #cccccc;"/>
-        </p>
+        <div align="center">        
+             <canvas id="myCanvas" width="800" height="600" style="background: #cccccc;"></canvas>
+             <div style="position: relative;">
+                 <button id="AddFish" onclick="AddFish();" style="width:100px; height:30px; margin-top: 20px;">Dodaj rybę</button>
+                 <button id="RemoveFish" onclick="RemoveFish();" style="width:100px; height:30px; margin-top: 20px;">Odejmij rybę</button>
+                 <button id="AddCannonBall" onclick="AddCannonBall();" style="height:30px;">Zwiększ wysokość stosu kul</button>
+                 <button id="RemoveCannonBall" onclick="RemoveCannonBall();" style="height:30px;">Zmniejsz wysokość stosu kul</button>
+             </div>
+        </div>
     </body>
 </html>
