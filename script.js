@@ -2,7 +2,7 @@ var canvas;
 var context;
 var repeater;
 var backgroundColor = "#88cdf2"; 
-var pile; var pileMaxSize = 4;
+var pile; var pileMaxSize = 7;
 var island; var islandHeight = 100; var islandWidth = 250; var islandColor="#dde077";
 var water; var waterHeight; var waterWidth; var waterColor = "#0324fc";
 var sun; var sunColor = "#f6fa00"; var opacityMinRange = 0.9; var sunMaxSize = 1.1; var sunRaysCount = 5;
@@ -24,7 +24,7 @@ function beginAnimation()
 
     //Initiailze Pile
     pile = new Pile();    
-    pile.setHeight(3);
+    pile.setHeight(5);
 
     //Initialize Island
     island = new Island(islandHeight,islandWidth, islandColor);
@@ -84,7 +84,7 @@ function Pile()
     this.drawCannonBalls = function()
     {
         var indexCounter = 0;
-        for(var i = 0; i <= this.height; i++)
+        for(var i = 0; i < this.height; i++)
         {
             for(var j = 0; j <= i;j++)
             {
@@ -98,7 +98,8 @@ function Pile()
     }
 
     this.fillCannonBalls = function(){
-        for(var i = 0; i <= this.height; i++)
+        this.cannonBalls = [];
+        for(var i = 0; i < this.height; i++)
         {
             for(var j = 0; j <= i; j++)
             {
@@ -755,7 +756,7 @@ function DrawClouds()
 
 function AddCannonBall()
 {
-    if(pile.height < 4)
+    if(pile.height < pileMaxSize)
     {
         pile.setHeight(pile.height + 1);
     }
