@@ -2,11 +2,13 @@ var canvas;
 var context;
 var repeater;
 var backgroundColor = "#88cdf2"; 
-var pile;
+var pile; var pileMaxSize = 4;
 var island; var islandHeight = 100; var islandWidth = 250; var islandColor="#dde077";
 var water; var waterHeight; var waterWidth; var waterColor = "#0324fc";
 var sun; var sunColor = "#f6fa00"; var opacityMinRange = 0.9; var sunMaxSize = 1.1; var sunRaysCount = 5;
-var fishColor = "#de7a10"; var fishCount = 3; var fishEyeColor = "#f2356b "; //#57a0ff = niebieski
+var fishColor = "#de7a10"; var fishCount = 6; var fishEyeColor = "#f2356b "; var fishLimit = 15; //#57a0ff = niebieski
+var cloudColor = "#e9f0f5"; var cloudCount = 5; var cloudElementsize = 15; var clouds = []; var cloudLimit = 7;
+var ship;
 const Directions = {
     LEFT: 'left',
     RIGHT: 'right'
@@ -39,6 +41,12 @@ function beginAnimation()
     //Initialize Sun;
     sun = new Sun(sunColor, 30);
     sun.init();
+    //Initialize coulds
+    InitializeClouds();
+    
+    ship = new Ship();
+    ship.setReferencePoint(water.X0 + 150, water.Y0);
+    ship.init();
 
     repeater = setTimeout(continueAnimation, 100);
 }
@@ -51,6 +59,8 @@ function continueAnimation()
     pile.draw();
     water.draw();
     sun.draw();
+    ship.draw();
+    DrawClouds();
     repeater = setTimeout(continueAnimation, 100);
 }
 
@@ -93,7 +103,7 @@ function Pile()
             for(var j = 0; j <= i; j++)
             {
                this.cannonBalls.push(new Circle(
-                    10,"#000000", island.X0 + island.width / 1.6 + (i + 1)*18, island.height + island.Y0 - (j + 1)*18
+                    10,"#000000", island.X0 + island.width / 3 + (i + 1)*18, island.height + island.Y0 - (j + 1)*18
                ));
             }
         }
@@ -231,7 +241,13 @@ function Fish(color,bodySize, finLength, finHeight, eyeSize)
         this.posX = this.X0 + (Math.random() * water.width);
         this.currentSinValue = Math.random() * Math.PI * 2;
         this.posY = this.Y0 + Math.sin(this.currentSinValue) * (this.waterCenter - 5);
-        this.setDirection(Directions.RIGHT);
+        if(Math.random() > 0.5) {
+            this.setDirection(Directions.RIGHT);
+        }
+        else{
+            this.setDirection(Directions.LEFT);
+        }    
+    
         this.eye = new Circle(fishEyeColor, this.eyeSize, this.X0, this.Y0);
     }
     
@@ -335,7 +351,124 @@ function Fish(color,bodySize, finLength, finHeight, eyeSize)
 
 function Ship()
 {
+    this.X0 = 0;
+    this.Y0 = 0;
 
+    this.woodColor = "#91572a";
+    this.lineColor = "#1f1711";
+    this.windowColor = "#bec2b8";
+    this.flagColor = "#edece6";
+
+    this.bottomWidth = 250;
+    this.bottomHeight = 80;
+
+    this.windowWidth = 20;
+    this.windowHeight = 30;
+
+    this.pillarHeight = 250;
+    this.pillarWidth = 15;
+
+    this.windows = [];
+    this.windowsCount = 5;
+
+    this.draw = function()
+    {
+        //bottom
+        context.save();
+        context.transform(this.bottomWidth, 0, -50, -this.bottomHeight, this.X0, this.Y0);
+        this.bottom1.display();
+        context.restore();
+
+        context.save();
+        context.transform(this.bottomWidth, 0, 50, -this.bottomHeight, this.X0, this.Y0);
+        this.bottom2.display();
+        context.restore();
+        //windows
+        for(var i = 0; i < this.windowsCount; i++)
+        {
+            var window = this.windows[i];
+            context.save();
+            context.transform(this.windowWidth, 0, 0, -this.windowHeight, this.X0 + ((i + 1) * 40) - (this.windowWidth / 2), this.Y0 - (this.bottomHeight / 2) + (this.windowHeight / 2));
+            window.display();
+            context.restore();
+        }
+        //pillar
+        context.save();
+        context.transform(this.pillarWidth, 0,0, -this.pillarHeight, this.pillar.X0, this.pillar.Y0);
+        this.pillar.display();
+        context.restore();
+
+         //flag
+        switch(this.direction)
+        {
+            case Directions.RIGHT:
+                    context.save();
+                    context.beginPath();
+                    context.ellipse(this.pillar.X0 + this.pillarWidth, this.pillar.Y0 - this.pillarHeight / 2, this.pillarHeight / 2, 20 , Math.PI / 2, 0, Math.PI,true);
+                    context.fillStyle = this.flagColor;
+                    context.fill();
+                    context.restore();
+                break;
+            case Directions.LEFT:
+                    context.save();
+                    context.beginPath();
+                    context.ellipse(this.pillar.X0, this.pillar.Y0 - this.pillarHeight / 2, this.pillarHeight / 2, 20 , Math.PI / 2, 0, Math.PI);
+                    context.fillStyle = this.flagColor;
+                    context.fill();
+                    context.restore();
+                break;    
+        }
+      
+    }
+
+    this.MoveShip = function(direction)
+    {       
+        this.direction = direction;
+
+        switch(this.direction)
+        {
+            case Directions.RIGHT:
+                if(this.X0 < canvas.width - this.bottomWidth)
+                {
+                    this.X0 += 1;
+                }
+                break;
+            case Directions.LEFT:
+                if(this.X0 > water.X0)
+                {
+                    this.X0 -=1;
+                }
+                break;  
+        }
+
+        this.pillar.setReferencePoint(this.X0 + (this.bottomWidth / 2) - (this.pillarWidth / 2), this.Y0 - this.bottomHeight);//correct pillar
+    }
+
+    this.init = function()
+    {
+        this.bottom1 = new Rect(this.woodColor);
+        this.bottom2 = new Rect(this.woodColor);
+
+        for(var i = 0; i < this.windowsCount; i++)
+        {
+            this.windows.push(new Rect(this.windowColor));      
+        }      
+        this.pillar = new Rect(this.woodColor);
+        this.pillar.setReferencePoint(this.X0 + (this.bottomWidth / 2) - (this.pillarWidth / 2), this.Y0 - this.bottomHeight);
+
+        this.direction = Directions.RIGHT;
+    }
+
+    this.setDirection = function(direction)
+    {
+        this.direction = direction;
+    } 
+    
+    this.setReferencePoint = function(x,y)
+    {
+        this.X0 = x;
+        this.Y0 = y;
+    }
 }
 
 function Sun(color, radius)
@@ -433,14 +566,121 @@ function Sun(color, radius)
     }
 }
 
-function Cloud()
+function Cloud(color)
 {
-//TODO:Fill with logic
-}
+    this.color = color;
+    this.X0 = 0;
+    this.Y0 = 0;
 
-function Cannon()
-{
-//TODO:Fill with logic    
+    this.posX = 0;
+    this.posY = 0;
+
+    this.cloudElementCount = 0;
+    this.cloudElementLimit = 10;
+    this.elements = [];
+    this.xMaxLimit = 30;
+    this.xMinLimit = 0;
+    this.currentX = 0;    
+
+    this.currentSinValue = 0;
+    this.maxSinValue = Math.PI * 2;
+    this.minSinValue = 0;
+
+    this.maxUpDistance = 10;
+
+    this.init = function()
+    {
+         //randomly generate cloud size
+        while(this.cloudElementCount < 1)
+        {
+            this.cloudElementCount = Math.floor(Math.random() * this.cloudElementLimit);
+        }
+
+        var columnCount = 1;
+        for(var i = 0; i < this.cloudElementCount; i++)
+        {
+            if(i % 2 == 0)
+            {
+                this.elements.push(
+                    new Circle(cloudElementsize, this.color, columnCount * 15, 5)
+                )
+                columnCount++;
+            }
+            else
+            {
+                this.elements.push(
+                    new Circle(cloudElementsize, this.color, columnCount * 15, 15)
+                )
+            }
+        }
+
+        if(Math.random() > 0.5) {
+            this.setDirection(Directions.RIGHT);
+        }
+        else{
+            this.setDirection(Directions.LEFT);
+        }  
+
+        this.currentSinValue = Math.random() * Math.PI * 2;
+        this.posY = this.Y0 + Math.sin(this.currentSinValue) * this.maxUpDistance;
+        
+        this.currentX = (Math.random() * this.xMaxLimit);
+        this.posX = this.currentX + this.X0;
+    }
+
+    this.setDirection = function(direction)
+    {
+       this.direction = direction;
+    }
+    
+    this.move = function()
+    {
+        this.posX = this.X0 + this.currentX;
+
+        switch(this.direction)
+        {
+            case Directions.RIGHT:
+                this.currentX++;
+                if(this.currentX > this.xMaxLimit)
+                {   
+                    this.direction = Directions.LEFT;
+                }
+                break;
+            case Directions.LEFT:
+                this.currentX--;
+                if(this.currentX < this.xMinLimit)
+                {
+                    this.direction = Directions.RIGHT;
+                }
+                break;
+        }
+
+        this.currentSinValue += Math.PI / 30;
+
+        if(this.currentSinValue >= this.maxSinValue)
+        {
+            this.currentSinValue = 0;
+        }
+        this.posY = this.Y0 + Math.sin(this.currentSinValue) * this.maxUpDistance;
+    }
+
+    this.draw = function()
+    {
+        for(var i = 0; i < this.cloudElementCount; i++)
+        {
+            var element = this.elements[i];
+            context.save();
+            context.transform(1,0,0,1, this.posX + element.trX, this.posY + element.trY)
+            element.display();
+            context.restore();
+        }
+    }
+
+    this.setReferencePoint = function(x,y)
+    {
+        this.X0 = x;
+        this.Y0 = y
+    }
 }
 
 function Circle(radius, color, rX, rY)
@@ -481,6 +721,36 @@ function Rect( color )
         this.Y0 = y;
     }
 }
+//GlobalFunctions
+function MakeCloud()
+{
+    var cloud = new Cloud(cloudColor);
+    var previousLastCloud = clouds[cloudCount - 1];
+    cloud.setReferencePoint(previousLastCloud.X0 + 100, sun.rY + Math.random() * 30);
+    cloud.init();
+    return cloud;
+}
+
+function InitializeClouds()
+{
+    for(var i = 0; i < cloudCount; i++)
+    {
+        var cloud = new Cloud(cloudColor);
+        cloud.setReferencePoint(sun.rX + ((i + 1) * 100), sun.rY + (Math.random() * 30));
+        cloud.init();
+        clouds.push(cloud);
+    }
+}
+
+function DrawClouds()
+{
+    for(var i = 0; i < cloudCount; i++)
+    {
+        var cloud = clouds[i];
+        cloud.move();
+        cloud.draw();
+    }
+}
 //ButtonsEvents
 
 function AddCannonBall()
@@ -501,7 +771,7 @@ function RemoveCannonBall()
 
 function AddFish()
 {
-    if(fishCount < 10)
+    if(fishCount < fishLimit)
     {
         ++fishCount;
         water.addFish();
@@ -516,3 +786,33 @@ function RemoveFish()
         water.removeFish();
     }
 }
+
+function AddCloud()
+{
+    if(cloudCount < cloudLimit)
+    {
+        var cloud = MakeCloud();
+        ++cloudCount;
+        clouds.push(cloud);
+    }
+}
+
+function RemoveCloud()
+{
+    if(cloudCount > 1)
+    {
+        --cloudCount;
+        clouds.pop();
+    }
+}
+//ArrowHandler
+document.onkeydown = function(e) {
+    switch (e.keyCode) {
+        case 37: //left
+            ship.MoveShip(Directions.LEFT);
+            break;
+        case 39: //right
+            ship.MoveShip(Directions.RIGHT);
+            break;
+    }
+};
