@@ -483,14 +483,6 @@ function Sun(color, radius)
 
     this.sunRaysWidth = 30;
     this.sunRays = [];
-
-    // this.initSunRays = function()
-    // {
-    //     for(var i = 0 ; i < sunRaysCount ; i++)
-    //     {
-    //         this.sunRays.push(new Rect(sunColor));
-    //     }
-    // }
     
     this.init = function()
     {
